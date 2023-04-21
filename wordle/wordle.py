@@ -10,12 +10,10 @@ GUESS_WORDS = np.genfromtxt(PATH+'/wordle/wordle_guesses.txt', dtype='str')
 def get_solution_word():
     """Choose a target word."""
     solution = np.random.choice(SOLUTION_WORDS)
-    return solution
+    return np.asarray(list(solution))
     
 def compare_words(solution, attempt):
     """Takes solution and attempt and return colour array"""
-    solution = np.asarray(list(solution))
-    attempt = np.asarray(list(attempt))
     correct = solution==attempt
     colours = np.asarray(['black']*5, dtype = '<U6')
 
@@ -42,9 +40,41 @@ def word_attempt(solution, attempt, letters_left):
     print("\n")
     
     if all(i == 'green' for i in colours):
-        return True
+        return True, None, None
+
+    yellows = attempt[np.where(colours == 'yellow')[0]]
     
-    return False
+    return False, yellows, colours
+
+def is_valid_attempt(attempt, yellows, colours, solution, letters_left, hard_mode):
+    """Establishes when an attempt is valid"""
+
+    #Must be in the guess word list
+    if "".join(attempt) not in GUESS_WORDS:
+        return False
+
+    if hard_mode==False:
+        return True
+
+    #Hard mode - requires greens to be repeated
+    if (attempt[np.where(colours=='green')[0]]==solution[np.where(colours=='green')[0]]).sum() != len(np.where(colours=='green')[0]):
+       return False
+
+    #Hard mode - requires yellows to be guessed again
+    if len(np.setdiff1d(yellows, attempt[np.where(colours!='green')[0]])) > 0:
+        return False
+
+    #Hard mode - requires yellows to be in a different spot
+    if len(yellows) > 0:
+        if (attempt[np.where(colours=='yellow')[0]]==yellows).sum() > 0:
+            return False
+
+    #Hard mode - requires that previously guessed wrong letters not guessed again
+    colours = compare_words(solution, attempt)
+    if len(np.setdiff1d(np.setdiff1d(attempt[np.where(colours=='black')[0]], solution), letters_left)) > 0:
+        return False
+    
+    return True
 
 def get_letters_left(letters_left, attempt):
     for letter in attempt:
@@ -52,21 +82,24 @@ def get_letters_left(letters_left, attempt):
             letters_left = np.delete(letters_left, np.where(letters_left==letter))
     return letters_left
     
-def play_wordle():
+def play_wordle(hard_mode=False):
     solution = get_solution_word()
     
     attempts = 1
     letters_left = np.asarray(list(string.ascii_lowercase))
-    
+    colours = np.asarray(['black']*5, dtype = '<U6')
+    yellows = np.asarray([])
+                                 
     while attempts < 7:
-        attempt = input(f"{attempts}. > ")
-        #Ensure it's in list of guess words
-        if attempt not in GUESS_WORDS:
+        attempt_word = input(f"{attempts}. > ")
+        attempt = np.asarray(list(attempt_word))
+        #Ensure it's in list of valid guess words
+        if not is_valid_attempt(attempt, yellows, colours, solution, letters_left, hard_mode):
             print('Not a valid word. Guess again.\n')
             continue
         
         letters_left = get_letters_left(letters_left, attempt)
-        is_winner = word_attempt(solution, attempt, letters_left)
+        is_winner, yellows, colours = word_attempt(solution, attempt, letters_left)
         if is_winner:
             print("YOU HAVE WON!")
             break
