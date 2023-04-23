@@ -4,7 +4,7 @@ There are two elements here. Firstly, I have recreated the game Wordle. Secondly
 # Description
 - The wordle game uses the functions and txt files within the folder wordle. The game must be run within a folder containing this folder. 
 - A demo notebook is included showing the simple method of playing the game. 
-- Other features such as hard mode will be added later.
+- Hard mode may be selected by inputting hard_mode=True. It is turned off by default. 
 - This will later be used to create a machine learning model which will easily solve wordle puzzles.
 
 # Packages
