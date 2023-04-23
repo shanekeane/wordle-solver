@@ -119,7 +119,7 @@ def get_letters_left(letters_left, attempt):
     
 def play_wordle(hard_mode=False):
     solution = get_solution_word()
-    
+    print('WELCOME TO WORDLE. TYPE xxx TO REVEAL ANSWER')
     attempts = 1
     letters_left = np.asarray(list(string.ascii_lowercase))
     colours = np.asarray(['black']*5, dtype = '<U6')
@@ -128,6 +128,12 @@ def play_wordle(hard_mode=False):
     while attempts < 7:
         attempt_word = input(f"{attempts}. > ")
         attempt = np.asarray(list(attempt_word))
+
+        #Abort condition
+        if attempt_word == 'xxx':
+            attempts = 7
+            break
+        
         #Ensure it's in list of valid guess words
         if not is_valid_attempt(solution, attempt, yellows, colours, letters_left, hard_mode):
             print('Not a valid word. Guess again.\n')
