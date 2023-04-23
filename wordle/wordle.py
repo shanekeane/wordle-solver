@@ -115,15 +115,23 @@ def get_letters_left(letters_left, attempt):
     for letter in attempt:
         if letter in letters_left:
             letters_left = np.delete(letters_left, np.where(letters_left==letter))
-    return letters_left
+    return letters_left 
     
 def play_wordle(hard_mode=False):
+    """
+    Play the wordle game.
+
+    Inputs: hard_mode - set to True to play in hard mode.
+    """
     solution = get_solution_word()
+    
     print('WELCOME TO WORDLE. TYPE xxx TO REVEAL ANSWER')
+    print('TYPE rrr TO REVEAL LETTER. TYPE ddd to rule out letter.\n')
     attempts = 1
     letters_left = np.asarray(list(string.ascii_lowercase))
     colours = np.asarray(['black']*5, dtype = '<U6')
     yellows = dict() #for remembering all the disallowed yellow places
+    previous_attempt = np.asarray(list('-----'))
                                  
     while attempts < 7:
         attempt_word = input(f"{attempts}. > ")
@@ -133,6 +141,37 @@ def play_wordle(hard_mode=False):
         if attempt_word == 'xxx':
             attempts = 7
             break
+        
+        #Reveal letter condition
+        if attempt_word == 'rrr':
+            reveal_index = np.random.choice(np.where(colours=='black')[0])
+            colours[reveal_index] = 'green'
+            if np.count_nonzero(solution[np.where(colours!='green')[0]] == solution[reveal_index]) == 0 \
+               and solution[reveal_index] in previous_attempt[np.where(colours=='yellow')[0]]:
+                colours[np.where(previous_attempt==solution[reveal_index])[0]] = 'black'
+            previous_attempt[reveal_index] = solution[reveal_index]
+              
+            for i in range(len(previous_attempt)):
+                print(colored(previous_attempt[i], colours[i]), end=" ")
+            print("\n")
+
+            if np.all(colours=='green'):
+                attempts = 7
+                break
+            
+            continue
+        previous_attempt = attempt
+        
+        #Delete letter left condition
+        if attempt_word == 'ddd':
+            remove_letter = np.random.choice(np.setdiff1d(letters_left, solution))
+            letters_left = np.delete(letters_left, np.where(letters_left==remove_letter))
+            print(f"Removed incorrect letter {remove_letter}.\n")
+            print("REMAINING LETTERS: ", end="")  
+            for i in range(len(letters_left)):
+                print(letters_left[i], end=" ")
+            print("\n")
+            continue
         
         #Ensure it's in list of valid guess words
         if not is_valid_attempt(solution, attempt, yellows, colours, letters_left, hard_mode):
