@@ -135,7 +135,6 @@ def play_wordle(hard_mode=False):
                                  
     while attempts < 7:
         attempt_word = input(f"{attempts}. > ")
-        attempt = np.asarray(list(attempt_word))
 
         #Abort condition
         if attempt_word == 'xxx':
@@ -160,7 +159,6 @@ def play_wordle(hard_mode=False):
                 break
             
             continue
-        previous_attempt = attempt
         
         #Delete letter left condition
         if attempt_word == 'ddd':
@@ -172,11 +170,13 @@ def play_wordle(hard_mode=False):
                 print(letters_left[i], end=" ")
             print("\n")
             continue
-        
+
+        attempt = np.asarray(list(attempt_word))
         #Ensure it's in list of valid guess words
         if not is_valid_attempt(solution, attempt, yellows, colours, letters_left, hard_mode):
             print('Not a valid word. Guess again.\n')
             continue
+        previous_attempt = attempt
         
         letters_left = get_letters_left(letters_left, attempt)
         is_winner, yellows, colours = word_attempt(solution, attempt, yellows)
